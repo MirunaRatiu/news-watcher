@@ -1,0 +1,7 @@
+feedparser~=6.0.14
+requests~=2.34.2
+python-dotenv~=1.2.3
+openai
+azure-identity
+azure-ai-projects>=2.1.0
+azure-core~=1.41.0

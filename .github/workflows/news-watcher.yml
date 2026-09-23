@@ -1,0 +1,56 @@
+name: UBB Watcher
+
+on:
+  schedule:
+    - cron: "17 * * * *"   
+  workflow_dispatch:        
+
+permissions:
+  id-token: write   
+  contents: write   # pt commit la seen.json
+
+concurrency:
+  group: ubb-news       
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Descarca codul
+        uses: actions/checkout@v4
+
+      - name: Instaleaza Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instaleaza pachetele
+        run: pip install -r requirements.txt
+
+      - name: Autentificare la Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Ruleaza watcher-ul
+        env:
+          FOUNDRY_PROJECT_ENDPOINT: ${{ vars.FOUNDRY_PROJECT_ENDPOINT }}
+          FOUNDRY_AGENT_NAME: ${{ vars.FOUNDRY_AGENT_NAME }}
+          FOUNDRY_AGENT_VERSION: ${{ vars.FOUNDRY_AGENT_VERSION }}
+          DISCORD_WEBHOOK_ALL: ${{ secrets.DISCORD_WEBHOOK_ALL }}
+          DISCORD_WEBHOOK_NEWS: ${{ secrets.DISCORD_WEBHOOK_NEWS }}
+        run: python main.py
+
+      - name: Salveaza seen.json in repo
+        if: always()   
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add seen.json
+          git diff --staged --quiet || (git commit -m "Actualizare seen.json" && git push)
