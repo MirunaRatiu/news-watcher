@@ -80,10 +80,6 @@ def notify_news_channel(announcement: dict, verdict: dict) -> None:
     if relevant is True:
         send_to_discord(WEBHOOK_NEWS, announcement["titlu"], verdict.get("rezumat", ""), announcement["link"], announcement["data"], GREEN)
 
-    elif relevant is None:
-        send_to_discord(WEBHOOK_NEWS, "⚠️ " + announcement["titlu"], "Agentul nu a putut clasifica anuntul. Verifica-l manual.", announcement["link"], announcement["data"], ORANGE)
-
-
 
 def process_announcement(announcement: dict) -> None:
     notify_all_channel(announcement)
